@@ -42,9 +42,10 @@
   :link '(url-link :tag "Github" "https://github.com/jcs090218/ffmpeg-player"))
 
 
-(defcustom ffmpeg-player-images-directory (format "%s%s"
-                                                  user-emacs-directory
-                                                  "ffmpeg-player/images/")
+(defcustom ffmpeg-player-images-directory (expand-file-name
+                                           (format "%s%s"
+                                                   user-emacs-directory
+                                                   "ffmpeg-player/images/"))
   "Directory that stores video images."
   :type 'string
   :group 'ffmpeg-player)
@@ -77,10 +78,6 @@
   ""
   "Command that convert video to audio source.")
 
-(defconst ffmpeg-player--command-kill-process
-  ""
-  "Command that kill ffmpeg process.")
-
 
 (defvar ffmpeg-player--frame-regexp nil
   "Frame regular expression for matching length.")
@@ -112,10 +109,6 @@ PATH is the input video file.  SOURCE is the output image directory."
           ffmpeg-player-fixed-id
           ffmpeg-player-image-extension))
 
-(defun ffmpeg-player--kill-ffmpeg ()
-  "Kill ffmpeg by command."
-  (shell-command ffmpeg-player--command-kill-process))
-
 ;;; Util
 
 (defun ffmpeg-player--safe-path (path)
@@ -125,12 +118,12 @@ PATH is the input video file.  SOURCE is the output image directory."
 
 (defun ffmpeg-player--clean-video-images ()
   "Clean up all video images."
-  (delete-directory (expand-file-name ffmpeg-player-images-directory) t))
+  (delete-directory ffmpeg-player-images-directory t))
 
 (defun ffmpeg-player--ensure-video-directory-exists ()
   "Ensure the video directory exists so we can put our image files."
-  (unless (file-directory-p (expand-file-name ffmpeg-player-images-directory))
-    (make-directory (expand-file-name ffmpeg-player-images-directory) t)))
+  (unless (file-directory-p ffmpeg-player-images-directory)
+    (make-directory ffmpeg-player-images-directory t)))
 
 ;;; Buffer
 
@@ -172,17 +165,19 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
 
 (defun ffmpeg-player--check-first-frame ()
   "Core function to check first frame image is ready."
-  (let ((images (directory-files (expand-file-name ffmpeg-player-images-directory) nil (ffmpeg-player--form-file-extension-regexp)))
-        (first-frame nil))
-    (if (not images)
-        (ffmpeg-player--set-first-frame-timer)
+  (if (f-empty? ffmpeg-player-images-directory)
+      (ffmpeg-player--set-first-frame-timer)
+    (let ((images (directory-files ffmpeg-player-images-directory nil (ffmpeg-player--form-file-extension-regexp)))
+          (first-frame nil))
       (setq first-frame (nth 0 images))
       (setq first-frame (s-replace ffmpeg-player-image-prefix "" first-frame))
       (setq first-frame (s-replace-regexp (ffmpeg-player--form-file-extension-regexp) "" first-frame))
       (setq ffmpeg-player--frame-regexp (format "%s%sd" "%0" (length first-frame)))
       (ffmpeg-player--resolve-fps)
       (setq ffmpeg-player--start-time (float-time))
-      (ffmpeg-player--update-frame))))
+      (ffmpeg-player--update-frame)
+      )
+    ))
 
 ;;; Frame
 
@@ -241,13 +236,15 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
 
 (defun ffmpeg-player--output-p ()
   "Check if output available."
-  (not (string-empty-p
-        (with-current-buffer (get-buffer "*Async Shell Command*")
-          (buffer-string)))))
+  (save-window-excursion
+    (switch-to-buffer (get-buffer "*Async Shell Command*"))
+    (message "bs: %s" (buffer-string))
+    (not (string-empty-p (buffer-string)))))
 
 (defun ffmpeg-player--resolve-fps ()
   "Resolve FPS."
-  (while (not (ffmpeg-player--output-p)))  ; ATTENTION: Make it hang.
+  (while (not (ffmpeg-player--output-p))  ; ATTENTION: Make it hang.
+    (message "[INFO] Waiting to resolve FPS"))
   (setq ffmpeg-player--current-fps
         (with-current-buffer (get-buffer "*Async Shell Command*")
           (goto-char (point-min))
@@ -276,10 +273,10 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
   (setq path (ffmpeg-player--safe-path path))
   (if (not path)
       (user-error "[ERROR] Input video file doesn't exists: %s" path)
-    (ffmpeg-player--clean-video-images)
+    ;;(ffmpeg-player--clean-video-images)
     (ffmpeg-player--ensure-video-directory-exists)
     (ffmpeg-player--clean-up)
-    (async-shell-command (ffmpeg-player--form-command path (expand-file-name ffmpeg-player-images-directory)))
+    (async-shell-command (ffmpeg-player--form-command path ffmpeg-player-images-directory))
     (ffmpeg-player--create-video-buffer path)
     (switch-to-buffer-other-window ffmpeg-player--buffer)
     (ffmpeg-player--check-first-frame)))
@@ -290,6 +287,7 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
   (buffer-disable-undo)
   )
 
+(ffmpeg-player--video (expand-file-name "./test/1.avi"))
 
 (provide 'ffmpeg-player)
 ;;; ffmpeg-player.el ends here
