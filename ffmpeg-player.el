@@ -51,9 +51,19 @@
   :type 'string
   :group 'ffmpeg-player)
 
-(defcustom ffmpeg-player-buffer-name "*ffmpeg-player* : %s"
+(defcustom ffmpeg-player-buffer-name "*ffmpeg-player*: %s"
   "Buffer name of the video player."
   :type 'string
+  :group 'ffmpeg-player)
+
+(defcustom ffmpeg-player-display-width 864
+  "Display width."
+  :type 'integer
+  :group 'ffmpeg-player)
+
+(defcustom ffmpeg-player-display-height 486
+  "Display height."
+  :type 'integer
   :group 'ffmpeg-player)
 
 (defcustom ffmpeg-player-loop t
@@ -77,12 +87,18 @@
   :group 'ffmpeg-player)
 
 (defconst ffmpeg-player--command-video-to-images
-  "ffmpeg -i \"%s\" \"%s%s%s.%s\""
+  "ffmpeg -i \"%s\" %s \"%s%s%s.%s\""
   "Command that convert video to image source.")
 
 (defconst ffmpeg-player--command-video-to-audio
   ""
   "Command that convert video to audio source.")
+
+(defconst ffmpeg-player--as-video-buffer-name "*Async Shell Command*: Video"
+  "Name of the async shell buffer for video output.")
+
+(defconst ffmpeg-player--as-audio-buffer-name "*Async Shell Command*: Audio"
+  "Name of the async shell buffer for audio output.")
 
 
 (defvar ffmpeg-player--pause nil
@@ -119,11 +135,22 @@
 
 ;;; Command
 
+(defun ffmpeg-player--form-command-list (lst)
+  "Form the command by LST."
+  (let ((output ""))
+    (dolist (cmd lst)
+      (setq output (concat output cmd " ")))
+    output))
+
 (defun ffmpeg-player--form-command (path source)
   "From the command by needed parameters.
 PATH is the input video file.  SOURCE is the output image directory."
   (format ffmpeg-player--command-video-to-images
           path
+          (ffmpeg-player--form-command-list
+           (list (format "-filter:v \"scale=w=%s:h=%s\""
+                         (ceiling ffmpeg-player-display-width)
+                         (ceiling ffmpeg-player-display-height))))
           source
           ffmpeg-player-image-prefix
           ffmpeg-player-fixed-id
@@ -190,12 +217,12 @@ PATH is the input video file.  SOURCE is the output image directory."
 (defun ffmpeg-player--output-p ()
   "Check if output available."
   (save-window-excursion
-    (switch-to-buffer (get-buffer "*Async Shell Command*"))
+    (switch-to-buffer (get-buffer ffmpeg-player--as-video-buffer-name))
     (not (string-empty-p (buffer-string)))))
 
 (defun ffmpeg-player--get-fps ()
   "Get the FPS from async shell command output buffer."
-  (with-current-buffer (get-buffer "*Async Shell Command*")
+  (with-current-buffer (get-buffer ffmpeg-player--as-video-buffer-name)
     (goto-char (point-min))
     (let ((end-pt -1))
       (search-forward "fps,")
@@ -206,7 +233,7 @@ PATH is the input video file.  SOURCE is the output image directory."
 
 (defun ffmpeg-player--get-duration ()
   "Get the duration from async shell command output buffer."
-  (with-current-buffer (get-buffer "*Async Shell Command*")
+  (with-current-buffer (get-buffer ffmpeg-player--as-video-buffer-name)
     (goto-char (point-min))
     (let ((start-pt -1))
       (search-forward "Duration: ")
@@ -346,6 +373,11 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
 
 ;;; Core
 
+(defun ffmpeg-player--rename-async-shell (new-name)
+  "Rename the async shell output buffer."
+  (with-current-buffer (get-buffer "*Async Shell Command*")
+    (rename-buffer new-name)))
+
 (defun ffmpeg-player--done-playing-p ()
   "Check if done playing the clip."
   (<= ffmpeg-player--current-duration ffmpeg-player--video-timer))
@@ -376,7 +408,11 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
     (ffmpeg-player--ensure-video-directory-exists)
     (ffmpeg-player--clean-up)
     (async-shell-command (ffmpeg-player--form-command path ffmpeg-player-images-directory))
-    (ffmpeg-player--create-video-buffer path)
+    (progn  ; Extract video
+      (ffmpeg-player--rename-async-shell ffmpeg-player--as-video-buffer-name)
+      (ffmpeg-player--create-video-buffer path))
+    (progn  ; Extract audio
+      )
     (switch-to-buffer-other-window ffmpeg-player--buffer)
     (ffmpeg-player--check-resolve-clip-info)))
 
