@@ -374,7 +374,7 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
 ;;; Core
 
 (defun ffmpeg-player--rename-async-shell (new-name)
-  "Rename the async shell output buffer."
+  "Rename the async shell output buffer to NEW-NAME."
   (with-current-buffer (get-buffer "*Async Shell Command*")
     (rename-buffer new-name)))
 
@@ -416,7 +416,15 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
     (switch-to-buffer-other-window ffmpeg-player--buffer)
     (ffmpeg-player--check-resolve-clip-info)))
 
-;; Mode
+;;; Sound
+
+(defun ffmpeg-player--play-sound-file-async (file)
+  "Play FILE with some overhead, but at least doesn't freeze Emacs."
+  (let ((command (car command-line-args)))
+    (start-process "play-sound-file-async" nil command "-Q" "--batch" "--eval"
+                   (format "(play-sound-file \"%s\")" file))))
+
+;;; Mode
 
 (defun ffmpeg-player-unpause ()
   "Unpause the video."
@@ -467,7 +475,8 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
   (use-local-map ffmpeg-player-mode-map))
 
 
-(ffmpeg-player--video (expand-file-name "./test/1.avi"))
+;;(ffmpeg-player--video (expand-file-name "./test/1.avi"))
+
 
 (provide 'ffmpeg-player)
 ;;; ffmpeg-player.el ends here
