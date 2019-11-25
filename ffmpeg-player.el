@@ -7,7 +7,7 @@
 ;; Description: Play video using ffmpeg.
 ;; Keyword: video ffmpeg buffering images
 ;; Version: 0.0.1
-;; Package-Requires: ((emacs "24.3") (s "1.12.0"))
+;; Package-Requires: ((emacs "24.4") (s "1.12.0") (f "0.20.0"))
 ;; URL: https://github.com/jcs090218/ffmpeg-player
 
 ;; This file is NOT part of GNU Emacs.
@@ -32,6 +32,7 @@
 
 ;;; Code:
 
+(require 'f)
 (require 's)
 
 
@@ -53,6 +54,11 @@
 (defcustom ffmpeg-player-buffer-name "*ffmpeg-player* : %s"
   "Buffer name of the video player."
   :type 'string
+  :group 'ffmpeg-player)
+
+(defcustom ffmpeg-player-loop t
+  "Loop when the video end."
+  :type 'boolean
   :group 'ffmpeg-player)
 
 (defcustom ffmpeg-player-image-prefix "snap"
@@ -79,15 +85,26 @@
   "Command that convert video to audio source.")
 
 
+(defvar ffmpeg-player--pause nil
+  "Flag for pausing video.")
+(defvar ffmpeg-player--pause-by-frame-not-ready nil
+  "Flag to check if pause by frame is not ready yet.")
+
 (defvar ffmpeg-player--frame-regexp nil
   "Frame regular expression for matching length.")
+
+(defvar ffmpeg-player--current-duration 0.0 "Current video length/duration.")
 
 (defvar ffmpeg-player--current-fps 0.0 "Current FPS that are being used.")
 (defvar ffmpeg-player--first-frame-time 0.2 "Time to check if the first frame exists.")
 (defvar ffmpeg-player--buffer-time 0.0 "Time to update buffer frame, calculate with FPS.")
 
-(defvar ffmpeg-player--start-time 0.0 "Record video start time.")
 (defvar ffmpeg-player--video-timer 0.0 "Time to record delta time.")
+
+(defvar ffmpeg-player--last-time 0.0
+  "Record last time for each frame, used for calculate delta time.")
+(defvar ffmpeg-player--delta-time 0.0
+  "Record delta time for each frame.")
 
 (defvar ffmpeg-player--frame-index 0 "Current frame index/counter.")
 
@@ -95,6 +112,9 @@
 
 (defvar ffmpeg-player--buffer nil "Buffer that displays video.")
 (defvar ffmpeg-player--buffer-timer nil "Timer that will update the image buffer.")
+
+(defvar ffmpeg-player--resolve-clip-info-timer nil "Timer that try to resolve FPS.")
+(defvar ffmpeg-player--resolve-clip-info-time 0.2 "Time to check if fps could be resolved.")
 
 
 ;;; Command
@@ -144,6 +164,84 @@ PATH is the input video file.  SOURCE is the output image directory."
   "Check if the video buffer alive."
   (buffer-name (get-buffer ffmpeg-player--buffer)))
 
+;;; Delta Time
+
+(defun ffmpeg-player--calc-delta-time ()
+  "Calculate the delta time."
+  (if ffmpeg-player--pause
+      (setq ffmpeg-player--delta-time 0.0)
+    (setq ffmpeg-player--delta-time (- (float-time) ffmpeg-player--last-time)))
+  (setq ffmpeg-player--last-time (float-time)))
+
+;;; Resolve FPS
+
+(defun ffmpeg-player--set-resolve-clip-info-timer ()
+  "Set the resolve clip information timer task."
+  (ffmpeg-player--kill-resolve-clip-info-timer)
+  (setq ffmpeg-player--resolve-clip-info-timer
+        (run-with-timer ffmpeg-player--resolve-clip-info-time nil 'ffmpeg-player--check-resolve-clip-info)))
+
+(defun ffmpeg-player--kill-resolve-clip-info-timer ()
+  "Kill the resolve clip information timer."
+  (when (timerp ffmpeg-player--resolve-clip-info-timer)
+    (cancel-timer ffmpeg-player--resolve-clip-info-timer)
+    (setq ffmpeg-player--resolve-clip-info-timer nil)))
+
+(defun ffmpeg-player--output-p ()
+  "Check if output available."
+  (save-window-excursion
+    (switch-to-buffer (get-buffer "*Async Shell Command*"))
+    (not (string-empty-p (buffer-string)))))
+
+(defun ffmpeg-player--get-fps ()
+  "Get the FPS from async shell command output buffer."
+  (with-current-buffer (get-buffer "*Async Shell Command*")
+    (goto-char (point-min))
+    (let ((end-pt -1))
+      (search-forward "fps,")
+      (search-backward " ")
+      (setq end-pt (1- (point)))
+      (search-backward " ")
+      (substring (buffer-string) (point) end-pt))))
+
+(defun ffmpeg-player--get-duration ()
+  "Get the duration from async shell command output buffer."
+  (with-current-buffer (get-buffer "*Async Shell Command*")
+    (goto-char (point-min))
+    (let ((start-pt -1))
+      (search-forward "Duration: ")
+      (setq start-pt (1- (point)))
+      (search-forward ",")
+      (substring (buffer-string) start-pt (- (point) 2)))))
+
+(defun ffmpeg-player--string-to-float-time (str-time)
+  "Convert STR-TIME to float time."
+  (let* ((split-time (split-string str-time ":"))
+         (time-arg (1- (length split-time)))
+         (float-time 0.0))
+    (dolist (st split-time)
+      (setq st (string-to-number st))
+      (setq float-time (+ float-time (* st (expt 60 time-arg))))
+      (setq time-arg (1- time-arg)))
+    float-time))
+
+(defun ffmpeg-player--resolve-clip-info ()
+  "Resolve clip's information."
+  (setq ffmpeg-player--current-duration
+        (ffmpeg-player--string-to-float-time (ffmpeg-player--get-duration)))
+  (setq ffmpeg-player--current-fps (ffmpeg-player--get-fps))
+  (setq ffmpeg-player--current-fps (string-to-number ffmpeg-player--current-fps))
+  (setq ffmpeg-player--buffer-time (/ 1.0 ffmpeg-player--current-fps)))
+
+(defun ffmpeg-player--check-resolve-clip-info ()
+  "Check if resolved clip inforamtion."
+  (if (not (ffmpeg-player--output-p))
+      (progn
+        (message "[INFO] Waiting to resolve clip information")
+        (ffmpeg-player--set-resolve-clip-info-timer))
+    (ffmpeg-player--resolve-clip-info)
+    (ffmpeg-player--check-first-frame)))
+
 ;;; First frame
 
 (defun ffmpeg-player--set-first-frame-timer ()
@@ -173,11 +271,8 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
       (setq first-frame (s-replace ffmpeg-player-image-prefix "" first-frame))
       (setq first-frame (s-replace-regexp (ffmpeg-player--form-file-extension-regexp) "" first-frame))
       (setq ffmpeg-player--frame-regexp (format "%s%sd" "%0" (length first-frame)))
-      (ffmpeg-player--resolve-fps)
-      (setq ffmpeg-player--start-time (float-time))
-      (ffmpeg-player--update-frame)
-      )
-    ))
+      (setq ffmpeg-player--last-time (float-time))
+      (ffmpeg-player--update-frame))))
 
 ;;; Frame
 
@@ -216,57 +311,61 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
       (erase-buffer)
       (insert str))))
 
+(defun ffmpeg-player--update-frame-index ()
+  "Calculate then update the frame index by time."
+  ;; Calculate the time passed.
+  (setq ffmpeg-player--video-timer (+ ffmpeg-player--video-timer ffmpeg-player--delta-time))
+  ;; Calculate the frame index.
+  (setq ffmpeg-player--frame-index (ceiling (* ffmpeg-player--current-fps ffmpeg-player--video-timer))))
+
+(defun ffmpeg-player--update-frame-image ()
+  "Refresh image display."
+  (if (ffmpeg-player--done-playing-p)
+      (if (not ffmpeg-player-loop)
+          (ffmpeg-player--update-frame-by-string "[INFO] Done display...")
+        )
+    (let ((frame-file (concat ffmpeg-player-images-directory (ffmpeg-player--form-frame-filename))))
+      (if (not (file-exists-p frame-file))
+          (progn
+            (setq ffmpeg-player--pause-by-frame-not-ready t)
+            (ffmpeg-player-pause)
+            (ffmpeg-player--update-frame-by-string "[INFO] Frame not ready"))
+        (when ffmpeg-player--pause-by-frame-not-ready
+          (ffmpeg-player-unpause)
+          (setq ffmpeg-player--pause-by-frame-not-ready nil))
+        (ffmpeg-player--update-frame-by-image-path frame-file))
+      (ffmpeg-player--set-buffer-timer))))
+
 (defun ffmpeg-player--update-frame ()
   "Core logic to update frame."
   (if (not (ffmpeg-player--buffer-alive-p))
       (user-error "[WARNING] Display buffer no longer alived")
-    ;; Calculate the time passed.
-    (setq ffmpeg-player--video-timer (- (float-time) ffmpeg-player--start-time))
-    ;; Calculate the frame index.
-    (setq ffmpeg-player--frame-index (ceiling (* ffmpeg-player--current-fps ffmpeg-player--video-timer)))
-    ;; Start refresh image display.
-    (let ((frame-file (concat ffmpeg-player-images-directory (ffmpeg-player--form-frame-filename))))
-      (if (file-exists-p frame-file)
-          (progn
-            (ffmpeg-player--update-frame-by-image-path frame-file)
-            (ffmpeg-player--set-buffer-timer))
-        (ffmpeg-player--update-frame-by-string "[Done display...]")))))
+    (ffmpeg-player--calc-delta-time)
+    (ffmpeg-player--update-frame-index)
+    (ffmpeg-player--update-frame-image)))
 
 ;;; Core
 
-(defun ffmpeg-player--output-p ()
-  "Check if output available."
-  (save-window-excursion
-    (switch-to-buffer (get-buffer "*Async Shell Command*"))
-    (message "bs: %s" (buffer-string))
-    (not (string-empty-p (buffer-string)))))
-
-(defun ffmpeg-player--resolve-fps ()
-  "Resolve FPS."
-  (while (not (ffmpeg-player--output-p))  ; ATTENTION: Make it hang.
-    (message "[INFO] Waiting to resolve FPS"))
-  (setq ffmpeg-player--current-fps
-        (with-current-buffer (get-buffer "*Async Shell Command*")
-          (goto-char (point-min))
-          (let ((end-pt -1))
-            (search-forward "fps,")
-            (search-backward " ")
-            (setq end-pt (1- (point)))
-            (search-backward " ")
-            (substring (buffer-string) (point) end-pt))))
-  (setq ffmpeg-player--current-fps (string-to-number ffmpeg-player--current-fps))
-  (setq ffmpeg-player--buffer-time (/ 1.0 ffmpeg-player--current-fps)))
+(defun ffmpeg-player--done-playing-p ()
+  "Check if done playing the clip."
+  (<= ffmpeg-player--current-duration ffmpeg-player--video-timer))
 
 (defun ffmpeg-player--clean-up ()
   "Reset/Clean up some variable before we play a new video."
   (ffmpeg-player--kill-first-frame-timer)
+  (ffmpeg-player--kill-resolve-clip-info-timer)
   (ffmpeg-player--kill-buffer-timer)
   (setq ffmpeg-player--buffer nil)
-  (setq ffmpeg-player--start-time 0.0)
+  (progn  ; Clean delta time
+    (setq ffmpeg-player--last-time 0.0)
+    (setq ffmpeg-player--delta-time 0.0))
   (setq ffmpeg-player--video-timer 0.0)
+  (setq ffmpeg-player--current-duration 0.0)
   (setq ffmpeg-player--current-fps 0.0)
   (setq ffmpeg-player--frame-index 0)
-  (setq ffmpeg-player--frame-regexp nil))
+  (setq ffmpeg-player--frame-regexp nil)
+  (progn  ; User settings
+    (ffmpeg-player-unpause)))
 
 (defun ffmpeg-player--video (path)
   "Play the video with PATH."
@@ -279,13 +378,58 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
     (async-shell-command (ffmpeg-player--form-command path ffmpeg-player-images-directory))
     (ffmpeg-player--create-video-buffer path)
     (switch-to-buffer-other-window ffmpeg-player--buffer)
-    (ffmpeg-player--check-first-frame)))
+    (ffmpeg-player--check-resolve-clip-info)))
+
+;; Mode
+
+(defun ffmpeg-player-unpause ()
+  "Unpause the video."
+  (interactive)
+  (setq ffmpeg-player--pause nil))
+
+(defun ffmpeg-player-pause ()
+  "Pause the video."
+  (interactive)
+  (setq ffmpeg-player--pause t))
+
+(defun ffmpeg-player-pause-or-unpause ()
+  "Pause or unpause video."
+  (interactive)
+  (if ffmpeg-player--pause (ffmpeg-player-unpause) (ffmpeg-player-pause)))
+
+(defun ffmpeg-player--move-timeline (n)
+  "Move video timeline by N seconds."
+  (setq ffmpeg-player--video-timer (+ ffmpeg-player--video-timer n))
+  (cond ((< ffmpeg-player--video-timer 0.0)
+         (setq ffmpeg-player--video-timer 0.0))
+        ((> ffmpeg-player--video-timer ffmpeg-player--current-duration)
+         (setq ffmpeg-player--video-timer ffmpeg-player--current-duration))))
+
+(defun ffmpeg-player-backward-10 ()
+  "Backward time 10 seconds."
+  (interactive)
+  (ffmpeg-player--move-timeline -10.0))
+
+(defun ffmpeg-player-forward-10 ()
+  "Forward time 10 seconds."
+  (interactive)
+  (ffmpeg-player--move-timeline 10.0))
+
+
+(defvar ffmpeg-player-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "SPC") #'ffmpeg-player-pause-or-unpause)
+    (define-key map (kbd "<left>") #'ffmpeg-player-backward-10)
+    (define-key map (kbd "<right>") #'ffmpeg-player-forward-10)
+    map)
+  "Keymap used in `ffmpeg-player-mode'.")
 
 (define-derived-mode ffmpeg-player-mode fundamental-mode "ffmpeg-player"
-  "Major mode for player ffmpeg video."
+  "Major mode for play ffmpeg video."
   :group 'ffmpeg-player
   (buffer-disable-undo)
-  )
+  (use-local-map ffmpeg-player-mode-map))
+
 
 (ffmpeg-player--video (expand-file-name "./test/1.avi"))
 
