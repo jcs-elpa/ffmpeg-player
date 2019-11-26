@@ -585,7 +585,8 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
          (setq ffmpeg-player--video-timer 0.0))
         ((> ffmpeg-player--video-timer ffmpeg-player--current-duration)
          (setq ffmpeg-player--video-timer ffmpeg-player--current-duration)))
-  (ffmpeg-player--play-sound-at-current-time))
+  (ffmpeg-player--play-sound-at-current-time)
+  (message "[INFO] Current time: %s" ffmpeg-player--video-timer))
 
 (defun ffmpeg-player-backward-10 ()
   "Backward time 10 seconds."
