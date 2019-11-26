@@ -38,7 +38,7 @@ You can play the video by calling function `ffmpeg-player-video`.
 
 ## Todo List
 
-- [] Play youtube video through url.
+- [ ] Play youtube video through url.
 
 
 ## Contribution
