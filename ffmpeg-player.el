@@ -1,4 +1,4 @@
-;;; ffmpeg-player.el --- Play video using ffmpeg.  -*- lexical-binding: t; -*-
+;;; ffmpeg-player.el --- Play video using ffmpeg  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2019  Shen, Jen-Chieh
 ;; Created date 2019-11-20 13:28:20
@@ -228,7 +228,8 @@ VOLUME of the sound from 0 ~ 100."
 
 (defun ffmpeg-player--clean-video-images ()
   "Clean up all video images."
-  (ffmpeg-player--async-delete-directory ffmpeg-player--img-dir))
+  (unless (string-empty-p ffmpeg-player--img-dir)
+    (ffmpeg-player--async-delete-directory ffmpeg-player--img-dir)))
 
 ;;; Buffer
 
