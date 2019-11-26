@@ -182,11 +182,18 @@ VOLUME of the sound from 0 ~ 100."
   (let ((ten-digit (expt 10.0 digit)))
     (/ (ceiling (* val ten-digit)) ten-digit)))
 
+(defun ffmpeg-player--count-windows ()
+  "Total window count."
+  (let ((count 0))
+    (dolist (fn (frame-list))
+      (setq count (+ (length (window-list fn)) count)))
+    count))
+
 (defun ffmpeg-player--walk-through-all-windows-once (fnc)
   "Walk through all the windows once and execute callback FNC."
   (save-selected-window
     (let ((cur-frame (selected-frame)) (index 0))
-      (while (< index (jcs-count-windows))
+      (while (< index (ffmpeg-player--count-windows))
         (when fnc (funcall fnc))
         (other-window 1 t)
         (setq index (+ index 1)))
