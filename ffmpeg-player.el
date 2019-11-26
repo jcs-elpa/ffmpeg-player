@@ -662,8 +662,5 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
   (use-local-map ffmpeg-player-mode-map))
 
 
-(ffmpeg-player-video (expand-file-name "./test/3.mp4"))
-
-
 (provide 'ffmpeg-player)
 ;;; ffmpeg-player.el ends here
