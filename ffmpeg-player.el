@@ -43,14 +43,6 @@
   :link '(url-link :tag "Github" "https://github.com/jcs090218/ffmpeg-player"))
 
 
-(defcustom ffmpeg-player-images-directory (expand-file-name
-                                           (format "%s%s"
-                                                   user-emacs-directory
-                                                   "ffmpeg-player/images/"))
-  "Directory that stores video images."
-  :type 'string
-  :group 'ffmpeg-player)
-
 (defcustom ffmpeg-player-buffer-name "*ffmpeg-player*: %s"
   "Buffer name of the video player."
   :type 'string
@@ -99,6 +91,18 @@
 
 (defconst ffmpeg-player--as-audio-buffer-name "*Async Shell Command*: Audio"
   "Name of the async shell buffer for audio output.")
+
+
+(defvar ffmpeg-player--images-directory ""
+  "Current image directory.")
+
+(defvar ffmpeg-player--images-dir-index 0
+  "Current image directory index to point to `ffmpeg-player--image-directories'.")
+
+(defvar ffmpeg-player--image-directories
+  (list (expand-file-name (format "%s%s" user-emacs-directory "ffmpeg-player/images-0/"))
+        (expand-file-name (format "%s%s" user-emacs-directory "ffmpeg-player/images-1/")))
+  "List of image directories so we can split the delete directory processes.")
 
 
 (defvar ffmpeg-player--current-path ""
@@ -206,12 +210,12 @@ VOLUME of the sound from 0 ~ 100."
 
 (defun ffmpeg-player--clean-video-images ()
   "Clean up all video images."
-  (delete-directory ffmpeg-player-images-directory t))
+  (delete-directory ffmpeg-player--images-directory t))
 
 (defun ffmpeg-player--ensure-video-directory-exists ()
   "Ensure the video directory exists so we can put our image files."
-  (unless (file-directory-p ffmpeg-player-images-directory)
-    (make-directory ffmpeg-player-images-directory t)))
+  (unless (file-directory-p ffmpeg-player--images-directory)
+    (make-directory ffmpeg-player--images-directory t)))
 
 ;;; Buffer
 
@@ -352,9 +356,9 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
 
 (defun ffmpeg-player--check-first-frame ()
   "Core function to check first frame image is ready."
-  (if (f-empty? ffmpeg-player-images-directory)
+  (if (f-empty? ffmpeg-player--images-directory)
       (ffmpeg-player--set-first-frame-timer)
-    (let ((images (directory-files ffmpeg-player-images-directory nil (ffmpeg-player--form-file-extension-regexp)))
+    (let ((images (directory-files ffmpeg-player--images-directory nil (ffmpeg-player--form-file-extension-regexp)))
           (first-frame nil))
       (setq first-frame (nth 0 images))
       (setq first-frame (s-replace ffmpeg-player-image-prefix "" first-frame))
@@ -416,7 +420,7 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
         ;; Do loop.
         (ffmpeg-player-replay)
         (ffmpeg-player--set-buffer-timer))
-    (let ((frame-file (concat ffmpeg-player-images-directory (ffmpeg-player--form-frame-filename))))
+    (let ((frame-file (concat ffmpeg-player--images-directory (ffmpeg-player--form-frame-filename))))
       (if (not (file-exists-p frame-file))
           (progn
             (setq ffmpeg-player--pause-by-frame-not-ready t)
@@ -472,6 +476,12 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
 
 (defun ffmpeg-player--clean-up ()
   "Reset/Clean up some variable before we play a new video."
+  (progn  ; Change to new image directory.
+    (setq ffmpeg-player--images-dir-index (1+ ffmpeg-player--images-dir-index))
+    (setq ffmpeg-player--images-dir-index
+          (% ffmpeg-player--images-dir-index (length ffmpeg-player--image-directories)))
+    (setq ffmpeg-player--images-directory
+          (nth ffmpeg-player--images-dir-index ffmpeg-player--image-directories)))
   (ffmpeg-player--kill-first-frame-timer)
   (ffmpeg-player--kill-resolve-clip-info-timer)
   (ffmpeg-player--kill-buffer-timer)
@@ -499,7 +509,7 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
     (ffmpeg-player--clean-up)
     (setq ffmpeg-player--current-path path)
     (progn  ; Extract video
-      (async-shell-command (ffmpeg-player--form-command-video path ffmpeg-player-images-directory))
+      (async-shell-command (ffmpeg-player--form-command-video path ffmpeg-player--images-directory))
       (ffmpeg-player--rename-async-shell ffmpeg-player--as-video-buffer-name)
       (ffmpeg-player--create-video-buffer path))
     (switch-to-buffer-other-window ffmpeg-player--buffer)
