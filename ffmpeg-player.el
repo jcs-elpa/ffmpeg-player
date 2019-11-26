@@ -110,8 +110,6 @@
 
 (defvar ffmpeg-player--pause nil
   "Flag for pausing video.")
-(defvar ffmpeg-player--pause-by-frame-not-ready nil
-  "Flag to check if pause by frame is not ready yet.")
 
 (defvar ffmpeg-player--frame-regexp nil
   "Frame regular expression for matching length.")
@@ -429,13 +427,7 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
         (ffmpeg-player--set-buffer-timer))
     (let ((frame-file (concat ffmpeg-player--img-dir (ffmpeg-player--form-frame-filename))))
       (if (not (file-exists-p frame-file))
-          (progn
-            (setq ffmpeg-player--pause-by-frame-not-ready t)
-            (ffmpeg-player-pause)
-            (ffmpeg-player--update-frame-by-string "[INFO] Frame not ready"))
-        (when ffmpeg-player--pause-by-frame-not-ready
-          (ffmpeg-player-unpause)
-          (setq ffmpeg-player--pause-by-frame-not-ready nil))
+          (ffmpeg-player--update-frame-by-string "[INFO] Frame not ready")
         (ffmpeg-player--update-frame-by-image-path frame-file))
       (ffmpeg-player--set-buffer-timer))))
 
