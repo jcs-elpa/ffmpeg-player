@@ -549,6 +549,26 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
   (setq ffmpeg-player--mute t)
   (message "[INFO] Mute audio"))
 
+(defun ffmpeg-player--move-volume (n)
+  "Move audio volume by N value."
+  (setq ffmpeg-player--volume (+ ffmpeg-player--volume n))
+  (cond ((< ffmpeg-player--volume 0)
+         (setq ffmpeg-player--volume 0))
+        ((> ffmpeg-player--volume 100)
+         (setq ffmpeg-player--volume 100)))
+  (ffmpeg-player--play-sound-at-current-time)
+  (message "[INFO] Current audio: %s" ffmpeg-player--volume))
+
+(defun ffmpeg-player-volume-dec-5 ()
+  "Decrease volume by 5."
+  (interactive)
+  (ffmpeg-player--move-volume -5))
+
+(defun ffmpeg-player-volume-inc-5 ()
+  "Increase volume by 5."
+  (interactive)
+  (ffmpeg-player--move-volume 5))
+
 ;;; Mode
 
 (defun ffmpeg-player-replay ()
@@ -602,8 +622,8 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
 (defvar ffmpeg-player-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "SPC") #'ffmpeg-player-pause-or-unpause)
-    (define-key map (kbd "<up>") #'ffmpeg-player-backward-10)
-    (define-key map (kbd "<down>") #'ffmpeg-player-forward-10)
+    (define-key map (kbd "<up>") #'ffmpeg-player-volume-inc-5)
+    (define-key map (kbd "<down>") #'ffmpeg-player-volume-dec-5)
     (define-key map (kbd "<left>") #'ffmpeg-player-backward-10)
     (define-key map (kbd "<right>") #'ffmpeg-player-forward-10)
     (define-key map (kbd "m") #'ffmpeg-player-mute-or-unmute)
