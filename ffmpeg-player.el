@@ -175,6 +175,11 @@ VOLUME of the sound from 0 ~ 100."
 
 ;;; Util
 
+(defun ffmpeg-player--round-to-digit (val digit)
+  "Round VAL to DIGIT."
+  (let ((ten-digit (expt 10.0 digit)))
+    (/ (ceiling (* val ten-digit)) ten-digit)))
+
 (defun ffmpeg-player--walk-through-all-windows-once (fnc)
   "Walk through all the windows once and execute callback FNC."
   (save-selected-window
@@ -456,8 +461,8 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
 
 (defun ffmpeg-player--done-playing-p ()
   "Check if done playing the clip."
-  (message "%s <= %s" ffmpeg-player--current-duration ffmpeg-player--video-timer)
-  (<= ffmpeg-player--current-duration ffmpeg-player--video-timer))
+  (<= ffmpeg-player--current-duration
+      (ffmpeg-player--round-to-digit ffmpeg-player--video-timer 2)))
 
 (defun ffmpeg-player--kill-display-buffer ()
   "Clean up display buffer."
@@ -591,6 +596,8 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
 (defvar ffmpeg-player-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "SPC") #'ffmpeg-player-pause-or-unpause)
+    (define-key map (kbd "<up>") #'ffmpeg-player-backward-10)
+    (define-key map (kbd "<down>") #'ffmpeg-player-forward-10)
     (define-key map (kbd "<left>") #'ffmpeg-player-backward-10)
     (define-key map (kbd "<right>") #'ffmpeg-player-forward-10)
     (define-key map (kbd "m") #'ffmpeg-player-mute-or-unmute)
