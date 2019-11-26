@@ -208,14 +208,21 @@ VOLUME of the sound from 0 ~ 100."
   (unless (file-exists-p path) (setq path (expand-file-name path)))
   (if (file-exists-p path) path nil))
 
-(defun ffmpeg-player--clean-video-images ()
-  "Clean up all video images."
-  (delete-directory ffmpeg-player--img-dir t))
-
 (defun ffmpeg-player--ensure-video-directory-exists ()
   "Ensure the video directory exists so we can put our image files."
   (unless (file-directory-p ffmpeg-player--img-dir)
     (make-directory ffmpeg-player--img-dir t)))
+
+(defun ffmpeg-player--async-delete-directory (path)
+  "Async delete directory by PATH."
+  (let ((command (car command-line-args)))
+    (start-process "ffmpeg-player--async-delete-directory"
+                   nil command "-Q" "--batch" "--eval"
+                   (format "(delete-directory \"%s\" t)" path))))
+
+(defun ffmpeg-player--clean-video-images ()
+  "Clean up all video images."
+  (ffmpeg-player--async-delete-directory ffmpeg-player--img-dir))
 
 ;;; Buffer
 
@@ -499,6 +506,12 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
     (setq ffmpeg-player--pause nil))
   (ffmpeg-player--kill-async-shell-buffer))
 
+(defun ffmpeg-player-clean ()
+  "Clean all the data, like images cache."
+  (dolist ()
+    ))
+
+;;;###autoload
 (defun ffmpeg-player-video (path)
   "Play the video with PATH."
   (setq path (ffmpeg-player--safe-path path))
