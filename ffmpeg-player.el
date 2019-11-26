@@ -175,6 +175,25 @@ VOLUME of the sound from 0 ~ 100."
 
 ;;; Util
 
+(defun ffmpeg-player--walk-through-all-windows-once (fnc)
+  "Walk through all the windows once and execute callback FNC."
+  (save-selected-window
+    (let ((cur-frame (selected-frame)) (index 0))
+      (while (< index (jcs-count-windows))
+        (when fnc (funcall fnc))
+        (other-window 1 t)
+        (setq index (+ index 1)))
+      (select-frame-set-input-focus cur-frame))))
+
+(defun ffmpeg-player--bury-buffer (buf-name)
+  "Bury BUF-NAME by walking through all the windows."
+  ;; NOTE: Regular `walk-windows' function wouldn't work.
+  ;; TBH, I don't know why.
+  (ffmpeg-player--walk-through-all-windows-once
+   (lambda ()
+     (when (string= (buffer-name) buf-name)
+       (bury-buffer)))))
+
 (defun ffmpeg-player--safe-path (path)
   "Check if safe PATH."
   (unless (file-exists-p path) (setq path (expand-file-name path)))
@@ -396,10 +415,11 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
       (if (not (file-exists-p frame-file))
           (progn
             (setq ffmpeg-player--pause-by-frame-not-ready t)
-            (ffmpeg-player-pause) (ffmpeg-player--kill-sound-process)
+            (ffmpeg-player-pause)
+            (message "fr: %s" (ffmpeg-player--done-playing-p))
             (ffmpeg-player--update-frame-by-string "[INFO] Frame not ready"))
         (when ffmpeg-player--pause-by-frame-not-ready
-          (ffmpeg-player-unpause) (ffmpeg-player--play-sound-at-current-time)
+          (ffmpeg-player-unpause)
           (setq ffmpeg-player--pause-by-frame-not-ready nil))
         (ffmpeg-player--update-frame-by-image-path frame-file))
       (ffmpeg-player--set-buffer-timer))))
@@ -424,17 +444,26 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
 
 (defun ffmpeg-player--bury-async-shell-buffer ()
   "Bury all the async shell buffers."
-  (bury-buffer ffmpeg-player--as-video-buffer-name)
-  (bury-buffer ffmpeg-player--as-audio-buffer-name))
+  ;; NOTE: Regular `bury-buffer' wouldn't work.
+  (ffmpeg-player--bury-buffer ffmpeg-player--as-video-buffer-name)
+  (ffmpeg-player--bury-buffer ffmpeg-player--as-audio-buffer-name))
 
 (defun ffmpeg-player--rename-async-shell (new-name)
   "Rename the async shell output buffer to NEW-NAME."
   (with-current-buffer (get-buffer "*Async Shell Command*")
-    (rename-buffer new-name)))
+    (rename-buffer new-name))
+  (ffmpeg-player--bury-async-shell-buffer))
 
 (defun ffmpeg-player--done-playing-p ()
   "Check if done playing the clip."
+  (message "%s <= %s" ffmpeg-player--current-duration ffmpeg-player--video-timer)
   (<= ffmpeg-player--current-duration ffmpeg-player--video-timer))
+
+(defun ffmpeg-player--kill-display-buffer ()
+  "Clean up display buffer."
+  (when ffmpeg-player--buffer
+    (kill-buffer ffmpeg-player--buffer)
+    (setq ffmpeg-player--buffer nil)))
 
 (defun ffmpeg-player--clean-up ()
   "Reset/Clean up some variable before we play a new video."
@@ -442,7 +471,7 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
   (ffmpeg-player--kill-resolve-clip-info-timer)
   (ffmpeg-player--kill-buffer-timer)
   (setq ffmpeg-player--current-path "")
-  (setq ffmpeg-player--buffer nil)
+  (ffmpeg-player--kill-display-buffer)
   (progn  ; Clean delta time
     (setq ffmpeg-player--last-time 0.0)
     (setq ffmpeg-player--delta-time 0.0))
@@ -452,10 +481,10 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
   (setq ffmpeg-player--frame-index 0)
   (setq ffmpeg-player--frame-regexp nil)
   (progn  ; User settings
-    (ffmpeg-player-unpause))
+    (setq ffmpeg-player--pause nil))
   (ffmpeg-player--kill-async-shell-buffer))
 
-(defun ffmpeg-player--video (path)
+(defun ffmpeg-player-video (path)
   "Play the video with PATH."
   (setq path (ffmpeg-player--safe-path path))
   (if (not path)
@@ -494,8 +523,7 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
 
 (defun ffmpeg-player--play-sound-at-current-time ()
   "Play the sound at current timeline."
-  (ffmpeg-player--play-sound ffmpeg-player--video-timer)
-  (ffmpeg-player--bury-async-shell-buffer))
+  (ffmpeg-player--play-sound ffmpeg-player--video-timer))
 
 (defun ffmpeg-player-mute-or-unmute ()
   "Mute/Unmute the sound."
@@ -526,11 +554,13 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
 (defun ffmpeg-player-unpause ()
   "Unpause the video."
   (interactive)
+  (ffmpeg-player--play-sound-at-current-time)
   (setq ffmpeg-player--pause nil))
 
 (defun ffmpeg-player-pause ()
   "Pause the video."
   (interactive)
+  (ffmpeg-player--kill-sound-process)
   (setq ffmpeg-player--pause t))
 
 (defun ffmpeg-player-pause-or-unpause ()
@@ -564,6 +594,7 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
     (define-key map (kbd "<left>") #'ffmpeg-player-backward-10)
     (define-key map (kbd "<right>") #'ffmpeg-player-forward-10)
     (define-key map (kbd "m") #'ffmpeg-player-mute-or-unmute)
+    (define-key map (kbd "r") #'ffmpeg-player-replay)
     map)
   "Keymap used in `ffmpeg-player-mode'.")
 
@@ -574,7 +605,7 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
   (use-local-map ffmpeg-player-mode-map))
 
 
-(ffmpeg-player--video (expand-file-name "./test/1.avi"))
+(ffmpeg-player-video (expand-file-name "./test/3.mp4"))
 
 
 (provide 'ffmpeg-player)
