@@ -35,7 +35,7 @@ You can play the video by calling function `ffmpeg-player-video`.
 (ffmpeg-player-video (expand-file-name "./test/1.avi"))
 ```
 
-And here is the control of the buffer.
+And here is the control of the media.
 
 * <kbd>space</kbd> - Pause/Unpause.
 * <kbd>up</kbd> - Increase volume by 5.
