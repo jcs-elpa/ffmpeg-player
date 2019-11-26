@@ -432,7 +432,6 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
           (progn
             (setq ffmpeg-player--pause-by-frame-not-ready t)
             (ffmpeg-player-pause)
-            (message "fr: %s" (ffmpeg-player--done-playing-p))
             (ffmpeg-player--update-frame-by-string "[INFO] Frame not ready"))
         (when ffmpeg-player--pause-by-frame-not-ready
           (ffmpeg-player-unpause)
