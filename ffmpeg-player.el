@@ -506,10 +506,12 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
     (setq ffmpeg-player--pause nil))
   (ffmpeg-player--kill-async-shell-buffer))
 
+;;;###autoload
 (defun ffmpeg-player-clean ()
   "Clean all the data, like images cache."
-  (dolist ()
-    ))
+  (interactive)
+  (dolist (cache-dir ffmpeg-player--img-dir-lst)
+    (ffmpeg-player--async-delete-directory cache-dir)))
 
 ;;;###autoload
 (defun ffmpeg-player-video (path)
