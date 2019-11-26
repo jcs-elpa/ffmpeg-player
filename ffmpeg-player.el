@@ -102,7 +102,12 @@
 
 (defvar ffmpeg-player--img-dir-lst
   (list (expand-file-name (format "%s%s" user-emacs-directory "ffmpeg-player/images-0/"))
-        (expand-file-name (format "%s%s" user-emacs-directory "ffmpeg-player/images-1/")))
+        (expand-file-name (format "%s%s" user-emacs-directory "ffmpeg-player/images-1/"))
+        (expand-file-name (format "%s%s" user-emacs-directory "ffmpeg-player/images-2/"))
+        (expand-file-name (format "%s%s" user-emacs-directory "ffmpeg-player/images-3/"))
+        (expand-file-name (format "%s%s" user-emacs-directory "ffmpeg-player/images-4/"))
+        (expand-file-name (format "%s%s" user-emacs-directory "ffmpeg-player/images-5/"))
+        (expand-file-name (format "%s%s" user-emacs-directory "ffmpeg-player/images-6/")))
   "List of image directories so we can split the delete directory processes.")
 
 
