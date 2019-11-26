@@ -34,6 +34,7 @@
 
 (require 'f)
 (require 's)
+(require 'subr-x)
 
 
 (defgroup ffmpeg-player nil
