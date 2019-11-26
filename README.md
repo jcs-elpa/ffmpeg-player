@@ -23,7 +23,7 @@ Base on `ffplay`'s website.
 and the SDL library. It is mostly used as a testbed for the various FFmpeg APIs.
 
 Hence, I have encounter some issues synchronize video and audio. Try move the
-timeline by pressing `<left>` or `<right>` key multiple times could resolve 
+timeline by pressing `<left>` or `<right>` key multiple times could resolve
 such a issue.
 
 
@@ -34,6 +34,16 @@ You can play the video by calling function `ffmpeg-player-video`.
 ```el
 (ffmpeg-player-video (expand-file-name "./test/1.avi"))
 ```
+
+And here is the control of the buffer.
+
+* <kbd>space</kbd> - Pause/Unpause.
+* <kbd>up</kbd> - Increase volume by 5.
+* <kbd>down</kbd> - Decrease volume by 5.
+* <kbd>left</kbd> - Backward timeline 5 seconds.
+* <kbd>right</kbd> - Forward timeline 5 seconds.
+* <kbd>m</kbd> - Mute/Unmute.
+* <kbd>r</kbd> - Replay.
 
 
 ## Todo List
