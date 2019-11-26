@@ -12,18 +12,19 @@ This package uses these following programs, make sure these program are added
 to your path.
 
 * [ffmpeg](https://www.ffmpeg.org/)
-* [ffplay](https://www.ffmpeg.org/) - Build with `ffmpeg`.
+* [ffplay](https://www.ffmpeg.org/) - Bundle with `ffmpeg`.
 
 
 ## Capability
 
 Base on `ffplay`'s website.
 
-> `ffplay` is a very simple and portable media player using the FFmpeg libraries
+> ffplay is a very simple and portable media player using the FFmpeg libraries
 and the SDL library. It is mostly used as a testbed for the various FFmpeg APIs.
 
-Hence, I have encounter some issue synchronize video and audio. Try move the
-timeline by pressing `<left>` or `<right>` key.
+Hence, I have encounter some issues synchronize video and audio. Try move the
+timeline by pressing `<left>` or `<right>` key multiple times could resolve 
+such a issue.
 
 
 ## Usage
@@ -33,6 +34,7 @@ You can play the video by calling function `ffmpeg-player-video`.
 ```el
 (ffmpeg-player-video (expand-file-name "./test/1.avi"))
 ```
+
 
 ## Todo List
 
