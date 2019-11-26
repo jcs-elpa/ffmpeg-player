@@ -539,13 +539,15 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
   "Unmute the sound."
   (interactive)
   (ffmpeg-player--play-sound-at-current-time)
-  (setq ffmpeg-player--mute nil))
+  (setq ffmpeg-player--mute nil)
+  (message "[INFO] Unmute audio"))
 
 (defun ffmpeg-player-mute ()
   "Mute the sound."
   (interactive)
   (ffmpeg-player--kill-sound-process)
-  (setq ffmpeg-player--mute t))
+  (setq ffmpeg-player--mute t)
+  (message "[INFO] Mute audio"))
 
 ;;; Mode
 
@@ -554,19 +556,22 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
   (interactive)
   (ffmpeg-player-unpause)
   (setq ffmpeg-player--video-timer 0.0)
-  (ffmpeg-player--play-sound))
+  (ffmpeg-player--play-sound)
+  (message "[INFO] Replaying '%s'" ffmpeg-player--current-path))
 
 (defun ffmpeg-player-unpause ()
   "Unpause the video."
   (interactive)
   (ffmpeg-player--play-sound-at-current-time)
-  (setq ffmpeg-player--pause nil))
+  (setq ffmpeg-player--pause nil)
+  (message "[INFO] Unpause video"))
 
 (defun ffmpeg-player-pause ()
   "Pause the video."
   (interactive)
   (ffmpeg-player--kill-sound-process)
-  (setq ffmpeg-player--pause t))
+  (setq ffmpeg-player--pause t)
+  (message "[INFO] Pause video"))
 
 (defun ffmpeg-player-pause-or-unpause ()
   "Pause or unpause video."
