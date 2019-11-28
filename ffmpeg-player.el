@@ -79,6 +79,11 @@
   :type 'string
   :group 'ffmpeg-player)
 
+(defcustom ffmpeg-player-mode-hook nil
+  "*Hook called by `ffmpeg-player-mode'."
+  :type 'hook
+  :group 'ffmpeg-player)
+
 (defconst ffmpeg-player--command-video-to-images
   "ffmpeg -i \"%s\" %s \"%s%s%s.%s\""
   "Command that convert video to image source.")
