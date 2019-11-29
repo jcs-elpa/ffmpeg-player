@@ -84,6 +84,11 @@
   :type 'hook
   :group 'ffmpeg-player)
 
+(defcustom ffmpeg-player-no-message nil
+  "No message print out when using video buffer."
+  :type 'boolean
+  :group 'ffmpeg-player)
+
 (defconst ffmpeg-player--command-video-to-images
   "ffmpeg -i \"%s\" %s \"%s%s%s.%s\""
   "Command that convert video to image source.")
@@ -187,6 +192,11 @@ VOLUME of the sound from 0 ~ 100."
                  (format "-volume %s" volume)))))
 
 ;;; Util
+
+(defun ffmpeg-player--message (fmt &rest args)
+  "Message args."
+  (unless ffmpeg-player-no-message
+    (apply 'message fmt args)))
 
 (defun ffmpeg-player--round-to-digit (val digit)
   "Round VAL to DIGIT."
@@ -563,7 +573,8 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
 
 (defun ffmpeg-player--play-sound-at-current-time ()
   "Play the sound at current timeline."
-  (ffmpeg-player--play-sound ffmpeg-player--video-timer))
+  (unless ffmpeg-player--pause
+    (ffmpeg-player--play-sound ffmpeg-player--video-timer)))
 
 (defun ffmpeg-player-mute-or-unmute ()
   "Mute/Unmute the sound."
@@ -575,14 +586,14 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
   (interactive)
   (ffmpeg-player--play-sound-at-current-time)
   (setq ffmpeg-player--mute nil)
-  (message "[INFO] Unmute audio"))
+  (ffmpeg-player--message "[INFO] Unmute audio"))
 
 (defun ffmpeg-player-mute ()
   "Mute the sound."
   (interactive)
   (ffmpeg-player--kill-sound-process)
   (setq ffmpeg-player--mute t)
-  (message "[INFO] Mute audio"))
+  (ffmpeg-player--message "[INFO] Mute audio"))
 
 (defun ffmpeg-player--move-volume (n)
   "Move audio volume by N value."
@@ -592,7 +603,7 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
         ((> ffmpeg-player--volume 100)
          (setq ffmpeg-player--volume 100)))
   (ffmpeg-player--play-sound-at-current-time)
-  (message "[INFO] Current audio: %s" ffmpeg-player--volume))
+  (ffmpeg-player--message "[INFO] Current audio: %s" ffmpeg-player--volume))
 
 (defun ffmpeg-player-volume-dec-5 ()
   "Decrease volume by 5."
@@ -612,21 +623,21 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
   (ffmpeg-player-unpause)
   (setq ffmpeg-player--video-timer 0.0)
   (ffmpeg-player--play-sound)
-  (message "[INFO] Replaying '%s'" ffmpeg-player--current-path))
+  (ffmpeg-player--message "[INFO] Replaying '%s'" ffmpeg-player--current-path))
 
 (defun ffmpeg-player-unpause ()
   "Unpause the video."
   (interactive)
-  (ffmpeg-player--play-sound-at-current-time)
   (setq ffmpeg-player--pause nil)
-  (message "[INFO] Unpause video"))
+  (ffmpeg-player--play-sound-at-current-time)
+  (ffmpeg-player--message "[INFO] Unpause video"))
 
 (defun ffmpeg-player-pause ()
   "Pause the video."
   (interactive)
-  (ffmpeg-player--kill-sound-process)
   (setq ffmpeg-player--pause t)
-  (message "[INFO] Pause video"))
+  (ffmpeg-player--kill-sound-process)
+  (ffmpeg-player--message "[INFO] Pause video"))
 
 (defun ffmpeg-player-pause-or-unpause ()
   "Pause or unpause video."
@@ -641,7 +652,7 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
         ((> ffmpeg-player--video-timer ffmpeg-player--current-duration)
          (setq ffmpeg-player--video-timer ffmpeg-player--current-duration)))
   (ffmpeg-player--play-sound-at-current-time)
-  (message "[INFO] Current time: %s" ffmpeg-player--video-timer))
+  (ffmpeg-player--message "[INFO] Current time: %s" ffmpeg-player--video-timer))
 
 (defun ffmpeg-player-backward-10 ()
   "Backward time 10 seconds."
