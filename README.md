@@ -40,8 +40,8 @@ And here is the control of the media.
 * <kbd>space</kbd> - Pause/Unpause.
 * <kbd>up</kbd> - Increase volume by 5.
 * <kbd>down</kbd> - Decrease volume by 5.
-* <kbd>left</kbd> - Backward timeline 5 seconds.
-* <kbd>right</kbd> - Forward timeline 5 seconds.
+* <kbd>left</kbd> - Backward timeline 10 seconds.
+* <kbd>right</kbd> - Forward timeline 10 seconds.
 * <kbd>m</kbd> - Mute/Unmute.
 * <kbd>r</kbd> - Replay.
 
