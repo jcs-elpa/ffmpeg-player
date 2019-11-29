@@ -194,9 +194,22 @@ VOLUME of the sound from 0 ~ 100."
 ;;; Util
 
 (defun ffmpeg-player--message (fmt &rest args)
-  "Message args."
+  "Message FMT and ARGS."
   (unless ffmpeg-player-no-message
     (apply 'message fmt args)))
+
+(defun ffmpeg-player--inhibit-sentinel-messages (fun &rest args)
+  "Inhibit messages in all sentinels started by FUN with ARGS."
+  (cl-letf* ((old-set-process-sentinel (symbol-function 'set-process-sentinel))
+             ((symbol-function 'set-process-sentinel)
+              (lambda (process sentinel)
+                (funcall
+                 old-set-process-sentinel
+                 process
+                 `(lambda (&rest args)
+                    (cl-letf (((symbol-function 'message) #'ignore))
+                      (apply (quote ,sentinel) args)))))))
+    (apply fun args)))
 
 (defun ffmpeg-player--round-to-digit (val digit)
   "Round VAL to DIGIT."
@@ -544,7 +557,9 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
     (ffmpeg-player--ensure-video-directory-exists)
     (setq ffmpeg-player--current-path path)
     (progn  ; Extract video
-      (async-shell-command (ffmpeg-player--form-command-video path ffmpeg-player--img-dir))
+      (ffmpeg-player--inhibit-sentinel-messages
+       #'async-shell-command
+       (ffmpeg-player--form-command-video path ffmpeg-player--img-dir))
       (ffmpeg-player--rename-async-shell ffmpeg-player--as-video-buffer-name)
       (ffmpeg-player--create-video-buffer path))
     (switch-to-buffer-other-window ffmpeg-player--buffer)
@@ -565,7 +580,8 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
   (if (string-empty-p ffmpeg-player--current-path)
       (user-error "[ERROR] Can't play with this path: %s" ffmpeg-player--current-path)
     (ffmpeg-player--kill-sound-process)
-    (async-shell-command
+    (ffmpeg-player--inhibit-sentinel-messages
+     #'async-shell-command
      (ffmpeg-player--form-command-audio ffmpeg-player--current-path
                                         time
                                         ffmpeg-player--volume))
