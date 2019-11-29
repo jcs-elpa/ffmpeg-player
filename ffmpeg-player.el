@@ -589,7 +589,7 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
 
 (defun ffmpeg-player--play-sound-at-current-time ()
   "Play the sound at current timeline."
-  (unless ffmpeg-player--pause
+  (when (and (not ffmpeg-player--pause) (not ffmpeg-player--mute))
     (ffmpeg-player--play-sound ffmpeg-player--video-timer)))
 
 (defun ffmpeg-player-mute-or-unmute ()
@@ -600,15 +600,15 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
 (defun ffmpeg-player-unmute ()
   "Unmute the sound."
   (interactive)
-  (ffmpeg-player--play-sound-at-current-time)
   (setq ffmpeg-player--mute nil)
+  (ffmpeg-player--play-sound-at-current-time)
   (ffmpeg-player--message "[INFO] Unmute audio"))
 
 (defun ffmpeg-player-mute ()
   "Mute the sound."
   (interactive)
-  (ffmpeg-player--kill-sound-process)
   (setq ffmpeg-player--mute t)
+  (ffmpeg-player--kill-sound-process)
   (ffmpeg-player--message "[INFO] Mute audio"))
 
 (defun ffmpeg-player--move-volume (n)
@@ -636,9 +636,8 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
 (defun ffmpeg-player-replay ()
   "Play video from the start."
   (interactive)
-  (ffmpeg-player-unpause)
   (setq ffmpeg-player--video-timer 0.0)
-  (ffmpeg-player--play-sound)
+  (ffmpeg-player-unpause)
   (ffmpeg-player--message "[INFO] Replaying '%s'" ffmpeg-player--current-path))
 
 (defun ffmpeg-player-unpause ()
