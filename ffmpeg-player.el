@@ -80,13 +80,33 @@
   :group 'ffmpeg-player)
 
 (defcustom ffmpeg-player-mode-hook nil
-  "*Hook called by `ffmpeg-player-mode'."
+  "Hook called by `ffmpeg-player-mode'."
   :type 'hook
   :group 'ffmpeg-player)
 
 (defcustom ffmpeg-player-no-message nil
   "No message print out when using video buffer."
   :type 'boolean
+  :group 'ffmpeg-player)
+
+(defcustom ffmpeg-player-before-insert-image-hook nil
+  "Hook called before inserting image."
+  :type 'hook
+  :group 'ffmpeg-player)
+
+(defcustom ffmpeg-player-after-insert-image-hook nil
+  "Hook called after inserting image."
+  :type 'hook
+  :group 'ffmpeg-player)
+
+(defcustom ffmpeg-player-before-insert-string-hook nil
+  "Hook called before inserting string."
+  :type 'hook
+  :group 'ffmpeg-player)
+
+(defcustom ffmpeg-player-after-insert-string-hook nil
+  "Hook called after inserting string."
+  :type 'hook
   :group 'ffmpeg-player)
 
 (defconst ffmpeg-player--command-video-to-images
@@ -442,7 +462,9 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
       (ffmpeg-player--clean-up)
     (with-current-buffer ffmpeg-player--buffer
       (erase-buffer)
-      (insert-image-file path))))
+      (run-hooks 'ffmpeg-player-before-insert-image-hook)
+      (insert-image-file path)
+      (run-hooks 'ffmpeg-player-after-insert-image-hook))))
 
 (defun ffmpeg-player--update-frame-by-string (str)
   "Update the frame by STR."
@@ -450,7 +472,9 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
       (ffmpeg-player--clean-up)
     (with-current-buffer ffmpeg-player--buffer
       (erase-buffer)
-      (insert str))))
+      (run-hooks 'ffmpeg-player-before-insert-string-hook)
+      (insert str)
+      (run-hooks 'ffmpeg-player-after-insert-string-hook))))
 
 (defun ffmpeg-player--update-frame-index ()
   "Calculate then update the frame index by time."
