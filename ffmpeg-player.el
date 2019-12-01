@@ -6,7 +6,7 @@
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Description: Play video using ffmpeg.
 ;; Keyword: video ffmpeg buffering images
-;; Version: 0.0.1
+;; Version: 0.1.5
 ;; Package-Requires: ((emacs "24.4") (s "1.12.0") (f "0.20.0"))
 ;; URL: https://github.com/jcs090218/ffmpeg-player
 
