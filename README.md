@@ -24,7 +24,7 @@ and the SDL library. It is mostly used as a testbed for the various FFmpeg APIs.
 
 Hence, I have encounter some issues synchronize video and audio. Try move the
 timeline by pressing `<left>` or `<right>` key multiple times could resolve
-such a issue.
+such an issue.
 
 
 ## Usage
