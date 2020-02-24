@@ -280,7 +280,7 @@ VOLUME of the sound from 0 ~ 100."
                    (format "(delete-directory %s t)" (shell-quote-argument path)))))
 
 (defun ffmpeg-player--clean-video-images ()
-  "Clean up all video images."
+  "Clean up current video images."
   (unless (string-empty-p ffmpeg-player--img-dir)
     (ffmpeg-player--async-delete-directory ffmpeg-player--img-dir)))
 
@@ -567,7 +567,8 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
   "Clean all the data, like images cache."
   (interactive)
   (dolist (cache-dir ffmpeg-player--img-dir-lst)
-    (ffmpeg-player--async-delete-directory cache-dir)))
+    (unless (string-empty-p cache-dir)
+      (ffmpeg-player--async-delete-directory cache-dir))))
 
 ;;;###autoload
 (defun ffmpeg-player-video (path)
