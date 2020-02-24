@@ -110,11 +110,11 @@
   :group 'ffmpeg-player)
 
 (defconst ffmpeg-player--command-video-to-images
-  "ffmpeg -i \"%s\" %s \"%s%s%s.%s\""
+  "ffmpeg -i %s %s \"%s%s%s.%s\""
   "Command that convert video to image source.")
 
 (defconst ffmpeg-player--command-play-audio
-  "ffplay \"%s\" %s"
+  "ffplay %s %s"
   "Command that convert video to audio source.")
 
 (defconst ffmpeg-player--as-video-buffer-name "*Async Shell Command*: Video"
@@ -277,7 +277,7 @@ VOLUME of the sound from 0 ~ 100."
   (let ((command (car command-line-args)))
     (start-process "ffmpeg-player--async-delete-directory"
                    nil command "-Q" "--batch" "--eval"
-                   (format "(delete-directory \"%s\" t)" (shell-quote-argument path)))))
+                   (format "(delete-directory %s t)" (shell-quote-argument path)))))
 
 (defun ffmpeg-player--clean-video-images ()
   "Clean up all video images."
