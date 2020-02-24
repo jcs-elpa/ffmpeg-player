@@ -6,7 +6,7 @@
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Description: Play video using ffmpeg.
 ;; Keyword: video ffmpeg buffering images
-;; Version: 0.1.5
+;; Version: 0.1.6
 ;; Package-Requires: ((emacs "24.4") (s "1.12.0") (f "0.20.0"))
 ;; URL: https://github.com/jcs090218/ffmpeg-player
 
@@ -170,7 +170,7 @@
 (defvar ffmpeg-player--buffer nil "Buffer that displays video.")
 (defvar ffmpeg-player--buffer-timer nil "Timer that will update the image buffer.")
 
-(defvar ffmpeg-player--resolve-clip-info-timer nil "Timer that try to resolve FPS.")
+(defvar ffmpeg-player--resolve-clip-info-timer nil "Timer that tries to resolve FPS.")
 (defvar ffmpeg-player--resolve-clip-info-time 0.2 "Time to check if fps could be resolved.")
 
 (defvar ffmpeg-player--mute nil "Flag to check if nil.")
@@ -190,7 +190,7 @@
   "From the command for video by needed parameters.
 PATH is the input video file.  SOURCE is the output image directory."
   (format ffmpeg-player--command-video-to-images
-          path
+          (shell-quote-argument path)
           (ffmpeg-player--form-command-list
            (list (format "-filter:v \"scale=w=%s:h=%s\""  ; Width & Height
                          (ceiling ffmpeg-player-display-width)
@@ -205,7 +205,7 @@ PATH is the input video file.  SOURCE is the output image directory."
 PATH is the input audio/video file.  TIME is the start time.
 VOLUME of the sound from 0 ~ 100."
   (format ffmpeg-player--command-play-audio
-          path
+          (shell-quote-argument path)
           (ffmpeg-player--form-command-list
            (list "-nodisp"  ; Don't display
                  (format "-ss %s" time)
@@ -216,7 +216,7 @@ VOLUME of the sound from 0 ~ 100."
 (defun ffmpeg-player--message (fmt &rest args)
   "Message FMT and ARGS."
   (unless ffmpeg-player-no-message
-    (apply 'message fmt args)))
+    (apply #'message fmt args)))
 
 (defun ffmpeg-player--inhibit-sentinel-messages (fun &rest args)
   "Inhibit messages in all sentinels started by FUN with ARGS."
@@ -277,7 +277,7 @@ VOLUME of the sound from 0 ~ 100."
   (let ((command (car command-line-args)))
     (start-process "ffmpeg-player--async-delete-directory"
                    nil command "-Q" "--batch" "--eval"
-                   (format "(delete-directory \"%s\" t)" path))))
+                   (format "(delete-directory \"%s\" t)" (shell-quote-argument path)))))
 
 (defun ffmpeg-player--clean-video-images ()
   "Clean up all video images."
@@ -318,7 +318,7 @@ VOLUME of the sound from 0 ~ 100."
   "Set the resolve clip information timer task."
   (ffmpeg-player--kill-resolve-clip-info-timer)
   (setq ffmpeg-player--resolve-clip-info-timer
-        (run-with-timer ffmpeg-player--resolve-clip-info-time nil 'ffmpeg-player--check-resolve-clip-info)))
+        (run-with-timer ffmpeg-player--resolve-clip-info-time nil #'ffmpeg-player--check-resolve-clip-info)))
 
 (defun ffmpeg-player--kill-resolve-clip-info-timer ()
   "Kill the resolve clip information timer."
@@ -347,9 +347,8 @@ VOLUME of the sound from 0 ~ 100."
   "Get the duration from async shell command output buffer."
   (with-current-buffer (get-buffer ffmpeg-player--as-video-buffer-name)
     (goto-char (point-min))
-    (let ((start-pt -1))
-      (search-forward "Duration: ")
-      (setq start-pt (1- (point)))
+    (search-forward "Duration: ")
+    (let ((start-pt (1- (point))))
       (search-forward ",")
       (substring (buffer-string) start-pt (- (point) 2)))))
 
@@ -394,7 +393,7 @@ VOLUME of the sound from 0 ~ 100."
   (setq ffmpeg-player--buffer-time (/ 1.0 ffmpeg-player--current-fps)))
 
 (defun ffmpeg-player--check-resolve-clip-info ()
-  "Check if resolved clip inforamtion."
+  "Check if resolved clip information."
   (if (not (ffmpeg-player--video-shell-output-p))
       (progn
         (message "[INFO] Waiting to resolve clip information")
@@ -441,7 +440,7 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
   "Set the buffer timer task."
   (ffmpeg-player--kill-buffer-timer)
   (setq ffmpeg-player--buffer-timer
-        (run-with-timer ffmpeg-player--buffer-time nil 'ffmpeg-player--update-frame)))
+        (run-with-timer ffmpeg-player--buffer-time nil #'ffmpeg-player--update-frame)))
 
 (defun ffmpeg-player--kill-buffer-timer ()
   "Kill the buffer timer."
@@ -502,7 +501,7 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
   (if (not (ffmpeg-player--buffer-alive-p))
       (progn
         (ffmpeg-player--kill-sound-process)
-        (user-error "[WARNING] Display buffer no longer alived"))
+        (user-error "[WARNING] Display buffer no longer live"))
     (ffmpeg-player--calc-delta-time)
     (ffmpeg-player--update-frame-index)
     (ffmpeg-player--update-frame-info)))
