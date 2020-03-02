@@ -15,7 +15,7 @@ many I/O times and disk space (Even though these frames will eventually get
 cleaned up). I would like to mention you all the information and consequences
 before you use this package.
 
-*See (melpa/6560)[https://github.com/melpa/melpa/pull/6560] for more information.*
+*See [melpa/6560](https://github.com/melpa/melpa/pull/6560) for more information.*
 
 
 ## External Program
