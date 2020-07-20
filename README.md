@@ -1,12 +1,10 @@
-[![Build Status](https://travis-ci.com/jcs090218/ffmpeg-player.svg?branch=master)](https://travis-ci.com/jcs090218/ffmpeg-player)
+[![Build Status](https://travis-ci.com/jcs-elpa/ffmpeg-player.svg?branch=master)](https://travis-ci.com/jcs-elpa/ffmpeg-player)
 [![MELPA](https://melpa.org/packages/ffmpeg-player-badge.svg)](https://melpa.org/#/ffmpeg-player)
 [![MELPA Stable](https://stable.melpa.org/packages/ffmpeg-player-badge.svg)](https://stable.melpa.org/#/ffmpeg-player)
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-
 # ffmpeg-player
 > Play video using ffmpeg.
-
 
 ## Acknowledge
 
@@ -17,7 +15,6 @@ before you use this package.
 
 *See [melpa/6560](https://github.com/melpa/melpa/pull/6560) for more information.*
 
-
 ## External Program
 
 This package uses these following programs, make sure these program are added
@@ -25,7 +22,6 @@ to your path.
 
 * [ffmpeg](https://www.ffmpeg.org/)
 * [ffplay](https://www.ffmpeg.org/) - Bundle with `ffmpeg`.
-
 
 ## Capability
 
@@ -37,7 +33,6 @@ and the SDL library. It is mostly used as a testbed for the various FFmpeg APIs.
 Hence, I have encounter some issues synchronize video and audio. Try move the
 timeline by pressing `<left>` or `<right>` key multiple times could resolve
 such an issue.
-
 
 ## Usage
 
@@ -57,11 +52,9 @@ And here is the control of the media.
 * <kbd>m</kbd> - Mute/Unmute.
 * <kbd>r</kbd> - Replay.
 
-
 ## Todo List
 
 - [ ] Play youtube video through url.
-
 
 ## Contribution
 
