@@ -8,7 +8,7 @@
 ;; Keyword: video ffmpeg buffering images
 ;; Version: 0.2.0
 ;; Package-Requires: ((emacs "24.4") (s "1.12.0") (f "0.20.0"))
-;; URL: https://github.com/jcs090218/ffmpeg-player
+;; URL: https://github.com/jcs-elpa/ffmpeg-player
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -41,7 +41,7 @@
   "Play video using ffmpeg."
   :prefix "ffmpeg-player-"
   :group 'tool
-  :link '(url-link :tag "Github" "https://github.com/jcs090218/ffmpeg-player"))
+  :link '(url-link :tag "Github" "https://github.com/jcs-elpa/ffmpeg-player"))
 
 
 (defcustom ffmpeg-player-buffer-name "*ffmpeg-player*: %s"
