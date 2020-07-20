@@ -36,13 +36,11 @@
 (require 's)
 (require 'subr-x)
 
-
 (defgroup ffmpeg-player nil
   "Play video using ffmpeg."
   :prefix "ffmpeg-player-"
   :group 'tool
   :link '(url-link :tag "Github" "https://github.com/jcs-elpa/ffmpeg-player"))
-
 
 (defcustom ffmpeg-player-buffer-name "*ffmpeg-player*: %s"
   "Buffer name of the video player."
@@ -123,7 +121,6 @@
 (defconst ffmpeg-player--as-audio-buffer-name "*Async Shell Command*: Audio"
   "Name of the async shell buffer for audio output.")
 
-
 (defvar ffmpeg-player--img-dir ""
   "Current image directory.")
 
@@ -139,7 +136,6 @@
         (expand-file-name (format "%s%s" user-emacs-directory "ffmpeg-player/images-5/"))
         (expand-file-name (format "%s%s" user-emacs-directory "ffmpeg-player/images-6/")))
   "List of image directories so we can split the delete directory processes.")
-
 
 (defvar ffmpeg-player--current-path ""
   "Record of the current video path.")
@@ -175,7 +171,6 @@
 
 (defvar ffmpeg-player--mute nil "Flag to check if nil.")
 (defvar ffmpeg-player--volume 75 "Current audio volume.")
-
 
 ;;; Command
 
@@ -703,7 +698,6 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
   (interactive)
   (ffmpeg-player--move-timeline 10.0))
 
-
 (defvar ffmpeg-player-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "SPC") #'ffmpeg-player-pause-or-unpause)
@@ -721,7 +715,6 @@ Information about first frame timer please see variable `ffmpeg-player--first-fr
   :group 'ffmpeg-player
   (buffer-disable-undo)
   (use-local-map ffmpeg-player-mode-map))
-
 
 (provide 'ffmpeg-player)
 ;;; ffmpeg-player.el ends here
