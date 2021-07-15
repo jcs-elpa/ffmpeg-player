@@ -1,7 +1,7 @@
-[![Build Status](https://travis-ci.com/jcs-elpa/ffmpeg-player.svg?branch=master)](https://travis-ci.com/jcs-elpa/ffmpeg-player)
+[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![MELPA](https://melpa.org/packages/ffmpeg-player-badge.svg)](https://melpa.org/#/ffmpeg-player)
 [![MELPA Stable](https://stable.melpa.org/packages/ffmpeg-player-badge.svg)](https://stable.melpa.org/#/ffmpeg-player)
-[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![CI](https://github.com/jcs-elpa/ffmpeg-player/actions/workflows/test.yml/badge.svg)](https://github.com/jcs-elpa/ffmpeg-player/actions/workflows/test.yml)
 
 # ffmpeg-player
 > Play video using ffmpeg.
