@@ -1,4 +1,7 @@
-(package "ffmpeg-player" "0.2.1" "Play video using ffmpeg")
+(package "ffmpeg-player"
+         "0.2.1"
+         "Play video using ffmpeg")
+
 (package-file "ffmpeg-player.el")
 
 (source "melpa")
