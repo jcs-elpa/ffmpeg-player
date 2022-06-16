@@ -4,11 +4,10 @@
 ;; Created date 2019-11-20 13:28:20
 
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
-;; Description: Play video using ffmpeg.
-;; Keyword: video ffmpeg buffering images
+;; URL: https://github.com/jcs-elpa/ffmpeg-player
 ;; Version: 0.2.1
 ;; Package-Requires: ((emacs "24.4") (s "1.12.0") (f "0.20.0"))
-;; URL: https://github.com/jcs-elpa/ffmpeg-player
+;; Keywords: video ffmpeg buffering images
 
 ;; This file is NOT part of GNU Emacs.
 

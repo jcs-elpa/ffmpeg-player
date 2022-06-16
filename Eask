@@ -2,6 +2,9 @@
          "0.2.1"
          "Play video using ffmpeg")
 
+(website-url "https://github.com/jcs-elpa/ffmpeg-player")
+(keywords "video" "ffmpeg" "buffering" "images")
+
 (package-file "ffmpeg-player.el")
 
 (source "melpa")
