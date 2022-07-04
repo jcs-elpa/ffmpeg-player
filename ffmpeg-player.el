@@ -7,7 +7,7 @@
 ;; URL: https://github.com/jcs-elpa/ffmpeg-player
 ;; Version: 0.2.1
 ;; Package-Requires: ((emacs "24.4") (s "1.12.0") (f "0.20.0"))
-;; Keywords: video ffmpeg buffering images
+;; Keywords: multimedia video ffmpeg buffering images
 
 ;; This file is NOT part of GNU Emacs.
 
