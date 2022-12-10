@@ -7,6 +7,8 @@
 
 (package-file "ffmpeg-player.el")
 
+(script "test" "echo \"Error: no test specified\" && exit 1")
+
 (source "melpa")
 
 (depends-on "emacs" "24.4")
