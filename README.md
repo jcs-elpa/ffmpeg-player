@@ -7,7 +7,7 @@
 
 [![CI](https://github.com/jcs-elpa/ffmpeg-player/actions/workflows/test.yml/badge.svg)](https://github.com/jcs-elpa/ffmpeg-player/actions/workflows/test.yml)
 
-## Acknowledge
+## 📝 Acknowledge
 
 This package will output video into images (in frame). This might causes
 many I/O times and disk space (Even though these frames will eventually get 
@@ -24,7 +24,7 @@ to your path.
 * [ffmpeg](https://www.ffmpeg.org/)
 * [ffplay](https://www.ffmpeg.org/) - Bundle with `ffmpeg`.
 
-## Capability
+## 🔌 Capability
 
 Base on `ffplay`'s website.
 
@@ -35,7 +35,7 @@ Hence, I have encounter some issues synchronize video and audio. Try move the
 timeline by pressing `<left>` or `<right>` key multiple times could resolve
 such an issue.
 
-## Usage
+## 🔧 Usage
 
 You can play the video by calling function `ffmpeg-player-video`.
 
@@ -53,7 +53,7 @@ And here is the control of the media.
 * <kbd>m</kbd> - Mute/Unmute.
 * <kbd>r</kbd> - Replay.
 
-## Todo List
+## 📝 Todo List
 
 - [ ] Play youtube video through url.
 
