@@ -1,6 +1,6 @@
 ;;; ffmpeg-player.el --- Play video using ffmpeg  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2024  Shen, Jen-Chieh
+;; Copyright (C) 2019-2025  Shen, Jen-Chieh
 ;; Created date 2019-11-20 13:28:20
 
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
