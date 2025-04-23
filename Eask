@@ -1,3 +1,5 @@
+;; -*- mode: eask; lexical-binding: t -*-
+
 (package "ffmpeg-player"
          "0.2.1"
          "Play video using ffmpeg")
